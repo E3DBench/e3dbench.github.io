@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmark Results - E3D-Bench</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <style>
+  :root {
+    --primary-color: #007BFF;
+    --primary-hover-color: #0056b3;
+    --light-gray-color: #f8f9fa;
+    --medium-gray-color: #e9ecef;
+    --dark-gray-color: #ced4da;
+    --text-color: #333;
+    --heading-color: #2c3e50;
+    --border-color: #dee2e6;
+    --table-header-bg: #f1f3f5; /* Default header background */
+
+    /* User-defined ranking colors */
+    --top1-bg: rgb(255,200,200);
+    --top2-bg: rgb(255,230,190);
+    --top3-bg: rgb(255,255,200);
+
+    /* Text colors for ranks */
+    --top1-text: #721c24; 
+    --top2-text: #856404; 
+    --top3-text: #856404; 
+
+    --font-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  body {
+    font-family: var(--font-sans-serif);
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: var(--text-color);
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+   .full-width-container { 
+    width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+
+  header {
+    text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    color: var(--heading-color);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 2.2rem;
+  }
+  header h1:first-of-type {
+    margin-bottom: 0.1rem;
+  }
+
+  header p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+  }
+  header p sup {
+    line-height: 0;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 1.8rem;
+    color: var(--heading-color);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  
+  #effectiveness-section { /* Container for effectiveness benchmarks */ }
+
+  .task-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .task-nav button {
+    background-color: var(--light-gray-color);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    font-weight: 500;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+  }
+
+  .task-nav button:hover {
+    background-color: var(--medium-gray-color);
+    border-color: #adb5bd;
+  }
+
+  .task-nav button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .tab-content {
+    display: none;
+    padding: 1rem 0;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .toggle-switch {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 26px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: var(--primary-color);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .setting-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  table.display {
+    width: 100%; 
+    border-collapse: collapse;
+    margin: 1.5rem auto; /* For centering */
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  table.display thead th { /* General styling for all th in thead */
+    background-color: var(--table-header-bg); 
+    color: var(--heading-color);
+    font-weight: 600;
+    padding: 0.6rem 0.4rem;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 2px solid var(--dark-gray-color);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+  }
+  table.display thead th:first-child {
+      border-left: none;
+  }
+  table.display thead th:last-child {
+      border-right: none;
+  }
+
+  table.display th[colspan] {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* INCREASED SPECIFICITY FOR CATEGORY HEADER COLORS */
+  table.display thead th.cat-gray   { background-color: #d8dde2 !important; color: #212529 !important; } 
+  table.display thead th.cat-blue   { background-color: #e0f3ff !important; color: #075985 !important; } 
+  table.display thead th.cat-green  { background-color: #d1fae5 !important; color: #065f46 !important;} 
+  table.display thead th.cat-orange { background-color: #fff7ed !important; color: #9a3412 !important;} 
+  table.display thead th.cat-cyan   { background-color: #ecfeff !important; color: #0e7490 !important;} 
+  table.display thead th.cat-purple { background-color: #f5f3ff !important; color: #5b21b6 !important;} 
+  table.display thead th.cat-pink   { background-color: #fdf2f8 !important; color: #9d174d !important;} 
+
+
+  table.display tbody tr {
+    border-bottom: 1px solid var(--border-color);
+  }
+  table.display tbody tr:nth-child(even) {
+    background-color: var(--light-gray-color);
+  }
+  table.display tbody tr:hover {
+    background-color: #e9ecef;
+  }
+
+  table.display td {
+    padding: 0.5rem 0.4rem;
+    text-align: center;
+    vertical-align: middle;
+    border-left: 1px solid #f1f1f1;
+    border-right: 1px solid #f1f1f1;
+  }
+   table.display td:first-child {
+      border-left: none;
+      text-align: left;
+      font-weight: 500;
+   }
+   table.display td:last-child {
+       border-right: none;
+   }
+
+  td.gold {
+    background-color: var(--top1-bg);
+    color: var(--top1-text);
+    font-weight: bold;
+  }
+  td.silver {
+    background-color: var(--top2-bg);
+    color: var(--top2-text);
+    font-weight: 500;
+  }
+  td.bronze {
+    background-color: var(--top3-bg);
+    color: var(--top3-text);
+    font-weight: normal;
+  }
+
+  .legend {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .legend span {
+    display: inline-block;
+    margin: 0.25rem 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+
+  .cat-gray-bg { background-color: #d8dde2; color: #212529; border-color: #adb5bd; } 
+  .cat-blue-bg { background-color: #e0f3ff; color: #075985; border-color: #90cfff; }
+  .cat-green-bg { background-color:#d1fae5; color: #065f46; border-color: #a3cfbb;}
+  .cat-orange-bg { background-color:#fff7ed; color: #9a3412; border-color: #ffc98a;}
+  .cat-cyan-bg { background-color:#ecfeff; color: #0e7490; border-color: #a6e9f2;}
+  .cat-purple-bg { background-color:#f5f3ff; color: #5b21b6; border-color: #d1b3e0;}
+  .cat-pink-bg { background-color:#fdf2f8; color: #9d174d; border-color: #f09cb7;}
+
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  #findings {
+    padding: 2rem 0;
+    background-color: var(--light-gray-color);
+    margin-top: 2rem;
+  }
+  #citation h2, #efficiency h2 { 
+    color: var(--heading-color);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  #findings h2.section-title-findings { 
+     margin-bottom: 1.5rem;
+  }
+
+  #findings h3 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--medium-gray-color);
+    padding-bottom: 0.25rem;
+  }
+  #findings ul {
+    list-style: disc;
+    margin-left: 20px;
+    margin-bottom: 1rem;
+    padding-left: 10px;
+  }
+  #findings li {
+    margin-bottom: 0.5rem;
+  }
+  #findings p {
+    margin-bottom: 1rem;
+  }
+  #findings strong {
+    color: var(--heading-color);
+  }
+  #findings p > em {
+    display: block;
+    margin-top: 0.25rem;
+    padding: 0.75rem 1rem;
+    background-color: #f0f9ff; /* Lighter Blue */
+    border-left: 3px solid var(--primary-color); 
+    font-style: normal;
+    border-radius: 3px;
+  }
+
+  #citation {
+    padding: 2rem 0;
+    margin-top: 1rem;
+  }
+  #citation pre {
+    background-color: var(--table-header-bg);
+    padding: 1.5rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  #citation pre code {
+    font-family: var(--font-monospace);
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+
+  .dataTables_wrapper.no-footer .dataTables_scrollBody {
+      border-bottom: none !important;
+  }
+
+  header {
+    text-align: center;
+    padding: 2.5rem 1rem 1rem; /* Reduced bottom padding */
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+    }
+
+    header h1 {
+    color: var(--heading-color);
+    font-weight: 600;
+    margin-bottom: 0.1rem; /* Reduced default bottom margin */
+    font-size: 2.2rem;
+    }
+    header h1:first-of-type {
+    margin-bottom: 0.1rem;
+    }
+
+    header p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+    }
+    header p sup {
+    line-height: 0;
+    }
+    .publication-authors a {
+    color: hsl(204, 86%, 53%) !important;
+    }
+    .link-block a {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    }
+    .publication-title {
+    font-family: 'Google Sans', sans-serif;
+    }
+    .footer .icon-link {
+    font-size: 25px;
+    color: #000;
+    }
+    /* Styles for the Overview Table */
+  #overview .section-title { /* If you use a general .section-title class */
+      margin-bottom: 0.75rem;
+  }
+
+  #overview-table {
+      border: 1px solid var(--border-color, #dee2e6); /* Add a subtle border around the table */
+      /* margin: 1.5rem auto; /* Ensures table itself is centered if its container is wider */
+      /* width: 95%; /* Adjust width as needed, or max-width */
+      /* max-width: 1100px; */
+  }
+
+  #overview-table thead th {
+      background-color: var(--table-header-bg, #f1f3f5); /* Ensure this var is defined or use a direct color */
+      font-size: 0.9em; /* Slightly larger header font */
+      padding: 0.8em 0.5em; /* Adjust padding */
+      border-bottom-width: 2px; /* Emphasize header bottom border */
+  }
+
+  #overview-table tbody td {
+      padding: 0.6em 0.5em; /* Consistent padding */
+      font-size: 0.85em;
+      vertical-align: middle;
+  }
+
+  #overview-table .group-header {
+      background-color: var(--medium-gray-color, #e9ecef); /* A slightly darker gray for group headers */
+      color: var(--heading-color, #2c3e50);
+      font-weight: 600;
+      font-size: 0.95em;
+      padding: 0.7em;
+      text-align: center;
+      border-top: 2px solid var(--dark-gray-color, #ced4da); /* Separator line above group */
+      border-bottom: 1px solid var(--dark-gray-color, #ced4da);
+  }
+
+  #overview-table td .method-link {
+      color: var(--primary-color, #007BFF);
+      text-decoration: none;
+      font-weight: 500;
+  }
+
+  #overview-table td .method-link:hover {
+      text-decoration: underline;
+      color: var(--primary-hover-color, #0056b3);
+  }
+
+  /* Styling for the legend/abbreviations below the overview table */
+  .overview-legend {
+      border: 1px dashed var(--border-color, #dee2e6);
+      padding: 1em;
+      background-color: var(--light-gray-color, #f8f9fa);
+      border-radius: 4px;
+  }
+
+  .overview-legend p small {
+      display: block; /* Ensures <small> takes full width for better formatting */
+  }
+
+  .overview-legend strong {
+      color: var(--heading-color, #2c3e50);
+}
+</style>
+</head>
+<body>
+
+<header style="padding-bottom: 1rem;">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmark Results - E3D-Bench</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <style>
+    /* ... ALL your other existing styles from the previous version ... */
+
+    /* Add/Update these styles for the icon links */
+    .header-icons {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem; /* Adjust gap between buttons */
+      margin-top: 1.25rem; /* Space above the buttons */
+      margin-bottom: 0.5rem; /* Space below the buttons */
+    }
+
+    .link-block {
+      /* display: inline-block; */ /* Flex handles layout */
+    }
+
+    .external-link.button-like { /* Target the <a> tag for styling */
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4em 0.9em; /* Adjust padding to match example's compactness */
+      border-radius: 15px;  /* Makes it rounded */
+      background-color: #363636; /* Dark gray, similar to example */
+      color: #ffffff; /* White text */
+      text-decoration: none;
+      font-size: 1rem; /* Smaller font, adjust as needed */
+      font-weight: 500;
+      line-height: 1.2; /* Adjust for vertical compactness */
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Subtle shadow */
+    }
+
+    .external-link.button-like .icon {
+      margin-right: 0.4em; /* Space between icon and text */
+      font-size: 1.1em; /* Icon size relative to button text */
+      line-height: 1; /* Helps with alignment */
+    }
+    
+    .external-link.button-like:hover {
+      background-color: #4a4a4a; /* Slightly lighter on hover */
+      transform: translateY(-1px); /* Slight lift on hover */
+    }
+    .external-link.button-like:active {
+      transform: translateY(0px); /* Press effect */
+    }
+    /* Styles for the new abstract questions section */
+  .abstract-questions-intro {
+    font-size: 1.05rem; /* Slightly larger for emphasis */
+    line-height: 1.7;
+    margin-top: 2rem;   /* Space above this new section */
+    margin-bottom: 1.25rem; /* Space before the first question box */
+    font-weight: 500; /* Or bold if you prefer */
+    color: var(--heading-color);
+    text-align: left; /* Override justify if needed for this line */
+  }
+
+  .question-box {
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 1rem;
+    border-radius: 6px; /* Slightly more rounded */
+    font-size: 1rem; 
+    line-height: 1.6;
+    border-left: 4px solid; /* Accent border on the left */
+    /* box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Optional subtle shadow */
+  }
+
+  .question-box.yellow-box {
+    background-color: #fffef0; /* Very light creamy yellow, as per screenshot */
+    border-left-color: #fad660; /* Softer gold/yellow border */
+    color: #5d5326; /* Darker yellow-brown text */
+  }
+
+  .question-box.blue-box {
+    background-color: #f5f6ff; /* Very light lavender/blue, as per screenshot */
+    border-left-color: #a8b5ff; /* Softer blue/lavender border */
+    color: #303d6b; /* Darker desaturated blue text */
+  }
+
+  .question-box .label-container {
+      display: inline-flex; /* Use flex to align items */
+      align-items: center; /* Vertically align items in the middle */
+      font-weight: bold;
+      margin-right: 0.6em;
+  }
+
+  .question-box .question-q {
+      font-size: 1.1em; /* Slightly larger Q */
+  }
+  .question-box .question-num {
+      font-size: 1.1em; /* Slightly larger number */
+  }
+
+  .question-box .bullet-icon {
+    display: inline-block;
+    width: 0.6em; /* Adjust size of bullet container */
+    height: 0.6em;
+    background-color: #444; /* Dark gray/black bullet color from screenshot */
+    border-radius: 50%;   /* Make it a circle */
+    margin-left: 0.3em;  /* Space after Q number */
+    margin-right: 0.1em; /* Tighter spacing before text if needed */
+    vertical-align: middle; /* Helps sometimes, but flex align-items is better */
+    position: relative;
+    top: -0.05em; /* Fine-tune vertical alignment */
+  }
+
+
+  .question-box em { /* For italicizing specific words */
+    font-style: italic;
+    font-weight: 600; /* Slightly bolder italic, adjust as needed */
+  }
+
+  </style>
+  <div class="container" style="text-align: center;">
+    <h1 style="color: var(--heading-color); font-weight: 600; margin-bottom: 0.1rem; font-size: 2.5rem; line-height: 1.1;">E3D-Bench: A Benchmark for</h1>
+    <h1 style="color: var(--heading-color); font-weight: 600; margin-bottom: 1rem; font-size: 2.5rem; line-height: 1.1;">End-to-End 3D Geometric Foundation Models</h1>
+    <!-- <p style="font-size: 1.1rem; color: #555; margin-bottom: 0.7rem;">
+      <a href="#WenyanCong" style="color: inherit; text-decoration: none;">Wenyan Cong</a><sup>1</sup>,
+      <a href="#YiqingLiang" style="color: inherit; text-decoration: none;">Yiqing Liang</a><sup>2</sup>,
+      <a href="#YanchengZhang" style="color: inherit; text-decoration: none;">Yancheng Zhang</a><sup>3</sup>,
+      <a href="#ZiyiYang" style="color: inherit; text-decoration: none;">Ziyi Yang</a><sup>1</sup>,<br>
+      <a href="#YanWang" style="color: inherit; text-decoration: none;">Yan Wang</a><sup>4</sup>,
+      <a href="#BorisIvanovic" style="color: inherit; text-decoration: none;">Boris Ivanovic</a><sup>4</sup>,
+      <a href="#MarcoPavone" style="color: inherit; text-decoration: none;">Marco Pavone</a><sup>4,5</sup>,
+      <a href="#ChenChen" style="color: inherit; text-decoration: none;">Chen Chen</a><sup>3</sup>,
+      <a href="#ZhangyangWang" style="color: inherit; text-decoration: none;">Zhangyang Wang</a><sup>1</sup>,
+      <a href="#ZhiwenFan" style="color: inherit; text-decoration: none;">Zhiwen Fan</a><sup>1</sup>
+    </p>
+    <p style="font-size: 1rem; color: #555; margin-bottom: 1rem;">
+      <sup>1</sup>University of Texas at Austin,
+      <sup>2</sup>Brown University,
+      <sup>3</sup>University of Central Florida,<br>
+      <sup>4</sup>NVIDIA Research,
+      <sup>5</sup>Stanford University
+    </p> -->
+    <!-- <h1 class="title publication-title">E3D-Bench: A Benchmark for End-to-End 3D Geometric Foundation Models</h1> -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <div class="publication-authors">
+              <span class="author-block">
+                <a href="https://wenyancong.com/">Wenyan Cong</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://lynl7130.github.io/">Yiqing Liang</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="https://yanchengzhang.com/">Yancheng Zhang</a><sup>3</sup>,</span>
+              <span class="author-block">
+                <a href="https://ingra14m.github.io/">Ziyi Yang</a><sup>1</sup>,</span><br>
+              <span class="author-block">
+                <a href="https://www.cs.cornell.edu/~yanwang/">Yan Wang</a><sup>4</sup>,</span>
+              <span class="author-block">
+                <a href="https://www.borisivanovic.com/">Boris Ivanovic</a><sup>4</sup>,</span>
+              <span class="author-block">
+                <a href="https://profiles.stanford.edu/marco-pavone">Marco Pavone</a><sup>4,5</sup>,</span>
+              <span class="author-block">
+                <a href="https://www.crcv.ucf.edu/chenchen/">Chen Chen</a><sup>3</sup>,</span>
+              <span class="author-block">
+                <a href="https://express.adobe.com/page/CAdrFMJ9QeI2y/">Zhangyang Wang</a><sup>1</sup>
+              <span class="author-block">
+                <a href="https://zhiwenfan.github.io/">Zhiwen Fan</a><sup>1</sup></span>
+                
+
+            </div>
+
+            <div class="publication-authors">
+              <span class="author-block"><sup>1</sup>The University of Texas at Austin</span>
+              <span class="author-block"><sup>2</sup>Brown University</span> <br>
+              <span class="author-block"><sup>3</sup>University of Central Florida</span> 
+              <span class="author-block"><sup>4</sup>NVIDIA Research</span>
+              <span class="author-block"><sup>5</sup>Stanford University</span> <br>
+            </div>
+
+            <div class="header-icons">
+      <span class="link-block">
+        <a href="http://arxiv.org/abs/YOUR_ARXIV_ID" target="_blank"
+           class="external-link button-like">
+          <span class="icon">
+              <i class="ai ai-arxiv"></i>
+          </span>
+          <span>arXiv</span>
+        </a>
+      </span>
+      <span class="link-block">
+        <a href="https://github.com/VITA-Group/E3D-Bench" target="_blank"
+           class="external-link button-like">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+          <span>Code</span>
+        </a>
+      </span>
+    </div>
+  </div>
+</header>
+
+
+<section id="abstract" class="container" style="margin-bottom: 2.5rem; text-align: justify;">
+  <h2 class="section-title" style="font-size: 1.8rem; margin-bottom: 1rem;">Abstract</h2>
+  <p style="font-size: 1rem; line-height: 1.7;">
+    Spatial intelligence, encompassing 3D reconstruction, perception, and reasoning, is fundamental to applications such as robotics, aerial imaging, and extended reality. 
+    A key enabler is the real-time, accurate estimation of core 3D attributes (camera parameters, point clouds, depth maps, and 3D point tracks) from unstructured or streaming imagery. 
+    Inspired by the success of large foundation models in language and 2D vision, a new class of end-to-end 3D geometric foundation models (GFMs) has emerged, directly predicting dense 3D representations in a single feed-forward pass, 
+    eliminating the need for slow or unavailable precomputed camera parameters. Since late 2023, the field has exploded with diverse variants. With the rapid proliferation of 3D GFMs, we ask:
+  <div class="question-box yellow-box">
+    <span class="label-container">
+        <span class="question-q">Q</span><span class="question-num">1</span>
+    </span>
+    Can GFMs serve as an <em>effective</em> and <em>robust</em> foundation for diverse 3D tasks and scenarios?
+  </div>
+  <div class="question-box blue-box">
+    <span class="label-container">
+        <span class="question-q">Q</span><span class="question-num">2</span>
+    </span>
+    Can GFMs serve as an <em>efficient</em> foundation, especially for latency-constrained 3D applications?
+  </div>
+  
+    In this work, we present <strong>the first comprehensive benchmark for 3D GFMs</strong>, covering five core tasks: sparse-view depth estimation, video depth estimation, 3D reconstruction, multi-view pose estimation, novel view synthesis, and spanning both standard and challenging out-of-distribution datasets. 
+    Our standardized toolkit automates dataset handling, evaluation protocols, and metric computation to ensure fair, reproducible comparisons. We evaluate 16 state-of-the-art GFMs, revealing their strengths and limitations across tasks and domains, and derive key insights to guide future model scaling and optimization. All code, evaluation scripts, and processed data will be publicly released to accelerate research in 3D spatial AI.
+  </p>
+
+<div id="effectiveness-section">
+    <h2 class="section-title">Effectiveness</h2>
+    <div class="container"> 
+      <nav class="task-nav">
+        <button class="tablink active" data-tab="recon"> Multi-View 3D Reconstruction </button>
+        <button class="tablink" data-tab="pose"> Multi-View Relative Pose Estimation</button>
+        <button class="tablink" data-tab="sparse">Sparse-View Depth Estimation</button>
+        <button class="tablink" data-tab="video">Video-Based Depth Estimation</button>
+        <button class="tablink" data-tab="nvs">Novel View Synthesis</button>
+      </nav>
+
+      <section id="recon" class="tab-content active">
+        <div class="toggle-switch">
+          <span class="setting-label">Extremely Sparse</span>
+          <label class="switch">
+            <input type="checkbox" id="setting-toggle">
+            <span class="slider"></span>
+          </label>
+          <span class="setting-label">Dense</span>
+        </div>
+        <div class="table-container">
+            <table id="recon-table" class="display">
+              <thead>
+                <tr>
+                  <th rowspan="2">Method</th>
+                  <th colspan="3" class="cat-gray">DTU</th>
+                  <th colspan="3" class="cat-blue">7-Scenes</th>
+                  <th colspan="3" class="cat-blue">NRGBD</th>
+                  <th colspan="3" class="cat-blue">ScanNet</th>
+                  <th colspan="3" class="cat-blue">TUM-RGBD</th>
+                </tr>
+                <tr>
+                  <th class="cat-gray">ACC ↓</th><th class="cat-gray">Comp ↓</th><th class="cat-gray">NC ↑</th>
+                  <th class="cat-blue">ACC ↓</th><th class="cat-blue">Comp ↓</th><th class="cat-blue">NC ↑</th>
+                  <th class="cat-blue">ACC ↓</th><th class="cat-blue">Comp ↓</th><th class="cat-blue">NC ↑</th>
+                  <th class="cat-blue">ACC ↓</th><th class="cat-blue">Comp ↓</th><th class="cat-blue">NC ↑</th>
+                  <th class="cat-blue">ACC ↓</th><th class="cat-blue">Comp ↓</th><th class="cat-blue">NC ↑</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-setting="Extremely Sparse"><td>DUS3R/LSM</td><td>1.731</td><td>1.936</td><td>0.786</td><td>0.146</td><td>0.181</td><td>0.744</td><td>0.144</td><td>0.154</td><td>0.867</td><td>0.474</td><td>0.420</td><td>0.714</td><td>1.108</td><td>0.746</td><td>0.724</td></tr>
+                <tr data-setting="Extremely Sparse"><td>MASt3R</td><td>1.895</td><td>2.003</td><td>0.788</td><td>0.262</td><td>0.254</td><td>0.732</td><td>0.113</td><td>0.102</td><td>0.810</td><td>0.467</td><td>0.389</td><td>0.701</td><td>0.738</td><td>0.747</td><td>0.739</td></tr>
+                <tr data-setting="Extremely Sparse"><td>Spann3R</td><td>6.275</td><td>5.460</td><td>0.705</td><td>0.255</td><td>0.188</td><td>0.653</td><td>0.262</td><td>0.262</td><td>0.628</td><td>0.487</td><td>0.408</td><td>0.617</td><td>1.561</td><td>1.002</td><td>0.621</td></tr>
+                <tr data-setting="Extremely Sparse"><td>FLARE</td><td>3.406</td><td>3.950</td><td>0.491</td><td>0.152</td><td>0.154</td><td>0.704</td><td>0.060</td><td>0.056</td><td>0.839</td><td>0.357</td><td>0.302</td><td>0.561</td><td>0.515</td><td>0.486</td><td>0.677</td></tr>
+                <tr data-setting="Extremely Sparse"><td>CUT3R</td><td>6.885</td><td>5.022</td><td>0.727</td><td>0.118</td><td>0.142</td><td>0.717</td><td>0.104</td><td>0.078</td><td>0.828</td><td>0.260</td><td>0.238</td><td>0.692</td><td>0.587</td><td>0.553</td><td>0.683</td></tr>
+                <tr data-setting="Extremely Sparse"><td>VGGT</td><td>2.716</td><td>2.301</td><td>0.765</td><td>0.077</td><td>0.080</td><td>0.762</td><td>0.069</td><td>0.071</td><td>0.903</td><td>0.063</td><td>0.079</td><td>0.798</td><td>0.385</td><td>0.331</td><td>0.747</td></tr>
+                <tr data-setting="Extremely Sparse"><td>Fast3R</td><td>4.493</td><td>3.681</td><td>0.735</td><td>0.149</td><td>0.116</td><td>0.692</td><td>0.361</td><td>0.201</td><td>0.782</td><td>0.546</td><td>0.306</td><td>0.621</td><td>0.955</td><td>0.630</td><td>0.627</td></tr>
+                <tr data-setting="Extremely Sparse"><td>MonST3R</td><td>20.145</td><td>10.322</td><td>0.603</td><td>0.276</td><td>0.277</td><td>0.677</td><td>0.471</td><td>0.458</td><td>0.659</td><td>0.623</td><td>0.541</td><td>0.594</td><td>1.688</td><td>1.031</td><td>0.670</td></tr>
+                <tr data-setting="Dense"><td>DUS3R/LSM</td><td>1.284</td><td>1.349</td><td>0.720</td><td>0.022</td><td>0.029</td><td>0.709</td><td>0.035</td><td>0.024</td><td>0.838</td><td>0.026</td><td>0.022</td><td>0.784</td><td>0.620</td><td>0.474</td><td>0.718</td></tr>
+                <tr data-setting="Dense"><td>MASt3R</td><td>1.374</td><td>1.409</td><td>0.723</td><td>0.025</td><td>0.028</td><td>0.697</td><td>0.043</td><td>0.042</td><td>0.809</td><td>0.035</td><td>0.020</td><td>0.757</td><td>0.209</td><td>0.211</td><td>0.708</td></tr>
+                <tr data-setting="Dense"><td>Spann3R</td><td>6.505</td><td>3.110</td><td>0.668</td><td>0.176</td><td>0.087</td><td>0.599</td><td>0.343</td><td>0.073</td><td>0.661</td><td>0.262</td><td>0.118</td><td>0.606</td><td>0.635</td><td>0.930</td><td>0.662</td></tr>
+                <tr data-setting="Dense"><td>CUT3R</td><td>4.710</td><td>2.413</td><td>0.699</td><td>0.025</td><td>0.028</td><td>0.665</td><td>0.076</td><td>0.029</td><td>0.782</td><td>0.042</td><td>0.030</td><td>0.693</td><td>0.740</td><td>0.595</td><td>0.665</td></tr>
+                <tr data-setting="Dense"><td>VGGT</td><td>2.103</td><td>1.925</td><td>0.748</td><td>0.019</td><td>0.032</td><td>0.659</td><td>0.015</td><td>0.012</td><td>0.874</td><td>0.016</td><td>0.017</td><td>0.728</td><td>0.065</td><td>0.091</td><td>0.692</td></tr>
+                <tr data-setting="Dense"><td>Fast3R</td><td>3.647</td><td>2.319</td><td>0.725</td><td>0.046</td><td>0.057</td><td>0.636</td><td>0.059</td><td>0.028</td><td>0.772</td><td>0.200</td><td>0.097</td><td>0.625</td><td>0.711</td><td>0.337</td><td>0.610</td></tr>
+                <tr data-setting="Dense"><td>MonST3R</td><td>14.455</td><td>7.508</td><td>0.636</td><td>0.100</td><td>0.091</td><td>0.648</td><td>0.336</td><td>0.246</td><td>0.665</td><td>0.346</td><td>0.293</td><td>0.599</td><td>1.138</td><td>0.948</td><td>0.591</td></tr>
+              </tbody>
+            </table>
+        </div>
+        <div class="legend">
+          <span class="cat-gray-bg">Object-Centric</span>
+          <span class="cat-blue-bg">Indoor Scenes</span>
+        </div>
+      </section>
+
+      <section id="pose" class="tab-content">
+        <div class="table-container">
+          <table id="pose-table" class="display rankable">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="3" class="cat-gray">CO3Dv2</th>
+                <th colspan="3" class="cat-blue">ScanNet & ADT & TUM-Dyn.</th>
+                <th colspan="3" class="cat-green">KITTI Odometry</th>
+                <th colspan="3" class="cat-orange">Bonn & Sintel & Rel10k</th>
+                <th colspan="3" class="cat-cyan">ACID & Syndrone</th>
+                <th colspan="2" class="cat-purple">ULTRRA</th>
+              </tr>
+              <tr>
+                <th class="cat-gray">ATE ↓</th><th class="cat-gray">RPE<sub>trans</sub> ↓</th><th class="cat-gray">RPE<sub>rot</sub> ↓</th>
+                <th class="cat-blue">ATE ↓</th><th class="cat-blue">RPE<sub>trans</sub> ↓</th><th class="cat-blue">RPE<sub>rot</sub> ↓</th>
+                <th class="cat-green">ATE ↓</th><th class="cat-green">RPE<sub>trans</sub> ↓</th><th class="cat-green">RPE<sub>rot</sub> ↓</th>
+                <th class="cat-orange">ATE ↓</th><th class="cat-orange">RPE<sub>trans</sub> ↓</th><th class="cat-orange">RPE<sub>rot</sub> ↓</th>
+                <th class="cat-cyan">ATE ↓</th><th class="cat-cyan">RPE<sub>trans</sub> ↓</th><th class="cat-cyan">RPE<sub>rot</sub> ↓</th>
+                <th class="cat-purple">RPE<sub>trans</sub> ↓</th><th class="cat-purple">RPE<sub>rot</sub> ↓</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr><td>DUSt3R/LSM</td><td>0.903</td><td>1.325</td><td class="silver">4.312</td><td class="bronze">0.139</td><td class="bronze">0.102</td><td class="silver">2.394</td><td>2.935</td><td>1.135</td><td>2.832</td><td>0.141</td><td>0.641</td><td>8.038</td><td>0.370</td><td>0.607</td><td>4.099</td><td>70.350</td><td>70.390</td></tr>
+            <tr><td>MASt3R</td><td>0.987</td><td>1.407</td><td class="gold">3.999</td><td class="silver">0.131</td><td class="silver">0.098</td><td>2.889</td><td class="gold">1.492</td><td class="gold">0.399</td><td class="gold">0.407</td><td>0.127</td><td>0.642</td><td>7.714</td><td>0.372</td><td>0.607</td><td>3.849</td><td>71.519</td><td>78.036</td></tr>
+            <tr><td>Spann3R</td><td>0.915</td><td>1.295</td><td>6.352</td><td>0.294</td><td>0.164</td><td>3.778</td><td>15.848</td><td>5.031</td><td>4.645</td><td>0.140</td><td>0.633</td><td>7.817</td><td>0.351</td><td>0.599</td><td>3.272</td><td class="gold">40.503</td><td class="gold">38.366</td></tr>
+            <tr><td>CUT3R</td><td class="bronze">0.847</td><td class="silver">1.209</td><td>6.361</td><td>0.185</td><td>0.133</td><td>4.471</td><td>2.421</td><td>0.747</td><td>0.669</td><td class="silver">0.109</td><td>0.633</td><td>7.569</td><td class="silver">0.303</td><td>0.593</td><td>2.864</td><td>55.135</td><td class="bronze">54.395</td></tr>
+            <tr><td>VGGT</td><td>1.639</td><td>8.702</td><td>71.350</td><td>0.654</td><td>0.425</td><td>30.787</td><td>5.012</td><td>3.546</td><td>3.885</td><td class="gold">0.062</td><td class="gold">0.111</td><td class="gold">0.592</td><td class="gold">0.300</td><td class="gold">0.462</td><td class="gold">0.818</td><td class="bronze">53.688</td><td>110.521</td></tr>
+            <tr><td>Fast3R</td><td class="gold">0.698</td><td class="gold">1.035</td><td class="bronze">4.352</td><td>0.499</td><td>0.391</td><td>23.739</td><td>22.109</td><td>7.573</td><td>7.366</td><td>0.136</td><td>0.636</td><td>8.700</td><td>0.378</td><td>0.637</td><td>3.653</td><td class="silver">51.149</td><td class="silver">54.150</td></tr>
+            <tr><td>MonST3R</td><td>2.456</td><td>3.327</td><td>23.458</td><td>0.448</td><td>0.286</td><td>12.817</td><td>2.426</td><td>0.782</td><td>0.949</td><td class="bronze">0.118</td><td>0.632</td><td class="bronze">6.666</td><td class="bronze">0.320</td><td class="bronze">0.568</td><td class="bronze">2.167</td><td>70.388</td><td>77.325</td></tr>
+            <tr><td>Align3R</td><td>1.027</td><td>1.550</td><td>6.499</td><td>0.425</td><td>0.215</td><td>9.430</td><td>4.611</td><td>0.817</td><td class="silver">0.600</td><td>0.134</td><td class="bronze">0.628</td><td>6.810</td><td>0.378</td><td class="silver">0.550</td><td>2.414</td><td>72.010</td><td>70.638</td></tr>
+            <tr><td>Easi3R</td><td>0.857</td><td>1.271</td><td>5.052</td><td>0.174</td><td>0.103</td><td class="bronze">2.872</td><td>3.625</td><td>0.919</td><td class="bronze">0.615</td><td>0.125</td><td>0.633</td><td>7.603</td><td>0.356</td><td>0.581</td><td>3.508</td><td>62.061</td><td>71.060</td></tr>
+            <tr><td>Geo4D</td><td class="silver">0.798</td><td class="bronze">1.264</td><td>5.692</td><td>0.436</td><td>0.175</td><td>10.565</td><td class="bronze">1.662</td><td class="silver">0.497</td><td>0.696</td><td>0.151</td><td class="silver">0.457</td><td class="silver">2.652</td><td>0.391</td><td>0.622</td><td class="silver">0.964</td><td>&#10008;</td><td>&#10008;</td></tr>
+            <tr><td>Aether</td><td>-</td><td>-</td><td>-</td><td class="gold">0.067</td><td class="gold">0.033</td><td class="gold">1.619</td><td class="silver">1.553</td><td class="bronze">0.744</td><td>0.744</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>&#10008;</td><td>&#10008;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="legend">
+          <span class="cat-gray-bg">In Distribution</span>
+          <span class="cat-blue-bg">Long Sequence</span>
+          <span class="cat-green-bg">Street Driving</span>
+          <span class="cat-orange-bg">Indoor-Outdoor</span>
+          <span class="cat-cyan-bg">Drone</span>
+          <span class="cat-purple-bg">Air-Ground</span>
+        </div>
+      </section>
+
+      <section id="sparse" class="tab-content">
+        <div class="toggle-switch">
+          <span class="setting-label">Normalized</span>
+          <label class="switch">
+            <input type="checkbox" id="sparse-scale-toggle">
+            <span class="slider"></span>
+          </label>
+          <span class="setting-label">Metric</span>
+        </div>
+        <div class="table-container">
+          <table id="sparse-depth-table" class="display rankable">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2" class="cat-gray">DTU</th>
+                <th colspan="2" class="cat-blue">ScanNet</th>
+                <th colspan="2" class="cat-green">KITTI</th>
+                <th colspan="2" class="cat-pink">ETH3D</th>
+                <th colspan="2" class="cat-pink">T&amp;T</th>
+              </tr>
+              <tr>
+                <th class="cat-gray">AbsRel ↓</th><th class="cat-gray">δ&lt;1.03 ↑</th>
+                <th class="cat-blue">AbsRel ↓</th><th class="cat-blue">δ&lt;1.03 ↑</th>
+                <th class="cat-green">AbsRel ↓</th><th class="cat-green">δ&lt;1.03 ↑</th>
+                <th class="cat-pink">AbsRel ↓</th><th class="cat-pink">δ&lt;1.03 ↑</th>
+                <th class="cat-pink">AbsRel ↓</th><th class="cat-pink">δ&lt;1.03 ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-scale="Normalized"><td>Robust MVD</td><td class="silver">2.490</td><td class="silver">80.056</td><td>7.468</td><td>35.651</td><td class="silver">9.419</td><td>30.505</td><td>9.302</td><td>42.909</td><td>6.379</td><td>58.409</td></tr>
+              <tr data-scale="Normalized"><td>DUSt3R/LSM</td><td class="bronze">2.741</td><td class="bronze">75.685</td><td class="silver">4.732</td><td class="silver">61.337</td><td class="gold">9.113</td><td>39.495</td><td class="bronze">3.132</td><td class="bronze">74.851</td><td class="bronze">3.106</td><td class="bronze">77.033</td></tr>
+              <tr data-scale="Normalized"><td>MASt3R</td><td>3.343</td><td>68.301</td><td>5.949</td><td class="bronze">54.516</td><td>9.542</td><td class="gold">46.805</td><td class="silver">2.471</td><td class="silver">81.291</td><td class="silver">2.381</td><td class="silver">82.262</td></tr>
+              <tr data-scale="Normalized"><td>Spann3R</td><td>6.431</td><td>38.339</td><td>7.779</td><td>33.713</td><td>10.195</td><td>30.858</td><td>5.121</td><td>54.708</td><td>5.580</td><td>52.812</td></tr>
+              <tr data-scale="Normalized"><td>CUT3R</td><td>6.200</td><td>47.421</td><td>8.231</td><td>39.464</td><td>23.849</td><td>12.087</td><td>5.224</td><td>59.864</td><td>4.594</td><td>56.773</td></tr>
+              <tr data-scale="Normalized"><td>VGGT</td><td class="gold">1.085</td><td class="gold">94.305</td><td class="gold">4.386</td><td class="gold">64.968</td><td class="bronze">9.436</td><td class="silver">41.309</td><td class="gold">1.782</td><td class="gold">86.337</td><td class="gold">2.075</td><td class="gold">85.174</td></tr>
+              <tr data-scale="Normalized"><td>Fast3R</td><td>3.940</td><td>62.120</td><td>6.271</td><td>50.283</td><td>13.390</td><td>26.734</td><td>4.692</td><td>62.663</td><td>4.423</td><td>64.873</td></tr>
+              <tr data-scale="Normalized"><td>MonST3R</td><td>5.346</td><td>67.977</td><td class="bronze">5.557</td><td>53.309</td><td>10.191</td><td class="bronze">40.274</td><td>3.368</td><td>72.624</td><td>3.289</td><td>72.491</td></tr>
+              <tr data-scale="Metric"><td>Robust MVD</td><td>2.242</td><td>84.574</td><td>8.016</td><td>35.924</td><td>10.846</td><td>25.534</td><td>10.944</td><td>35.526</td><td>6.982</td><td>60.643</td></tr>
+              <tr data-scale="Metric"><td>MASt3R</td><td>84.904</td><td>0.000</td><td>93.584</td><td>0.000</td><td>99.069</td><td>0.000</td><td>97.021</td><td>0.000</td><td>98.234</td><td>0.000</td></tr>
+              <tr data-scale="Metric"><td>CUT3R</td><td>84.904</td><td>0.000</td><td>93.584</td><td>0.000</td><td>99.069</td><td>0.000</td><td>97.022</td><td>0.000</td><td>98.234</td><td>0.000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="legend">
+          <span class="cat-gray-bg">Object-Centric</span>
+          <span class="cat-blue-bg">Indoor Scene</span>
+          <span class="cat-green-bg">Outdoor Scene</span>
+          <span class="cat-pink-bg">Mixed Scene</span>
+        </div>
+      </section>
+
+      <section id="video" class="tab-content">
+        <div class="toggle-switch">
+          <span class="setting-label">Normalized</span>
+          <label class="switch">
+            <input type="checkbox" id="video-scale-toggle">
+            <span class="slider"></span>
+          </label>
+          <span class="setting-label">Metric</span>
+        </div>
+        <div class="table-container">
+          <table id="video-depth-table" class="display rankable">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2" class="cat-blue">Bonn</th>
+                <th colspan="2" class="cat-blue">TUM Dyn</th>
+                <th colspan="2" class="cat-green">KITTI</th>
+                <th colspan="2" class="cat-orange">PointOdyssey</th>
+                <th colspan="2" class="cat-cyan">Syndrone</th>
+                <th colspan="2" class="cat-pink">Sintel</th>
+              </tr>
+              <tr>
+                <th class="cat-blue">AbsRel ↓</th><th class="cat-blue">δ&lt;1.25 ↑</th>
+                <th class="cat-blue">AbsRel ↓</th><th class="cat-blue">δ&lt;1.25 ↑</th>
+                <th class="cat-green">AbsRel ↓</th><th class="cat-green">δ&lt;1.25 ↑</th>
+                <th class="cat-orange">AbsRel ↓</th><th class="cat-orange">δ&lt;1.25 ↑</th>
+                <th class="cat-cyan">AbsRel ↓</th><th class="cat-cyan">δ&lt;1.25 ↑</th>
+                <th class="cat-pink">AbsRel ↓</th><th class="cat-pink">δ&lt;1.25 ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-scale="Normalized"><td>DepthAnyVideo</td><td>0.515</td><td>25.3</td><td>0.184</td><td>84.6</td><td>0.074</td><td>95.3</td><td>0.417</td><td>61.7</td><td>0.299</td><td>83.1</td><td>0.455</td><td>47.9</td></tr>
+              <tr data-scale="Normalized"><td>VideoDepthAnything</td><td>0.268</td><td>48.3</td><td>1.101</td><td>89.0</td><td class="silver">0.060</td><td class="gold">98.2</td><td>0.283</td><td>70.3</td><td>0.138</td><td>92.5</td><td>1.691</td><td>45.4</td></tr>
+              <tr data-scale="Normalized"><td>DepthCrafter</td><td>0.107</td><td>88.3</td><td>0.159</td><td>79.5</td><td>0.120</td><td>86.2</td><td>0.144</td><td>81.3</td><td>0.380</td><td>87.5</td><td>0.354</td><td>58.2</td></tr>
+              <tr data-scale="Normalized"><td>Marigold</td><td>0.329</td><td>52.2</td><td>0.600</td><td>32.8</td><td>0.332</td><td>43.3</td><td>0.346</td><td>47.5</td><td>1.331</td><td>16.8</td><td>0.417</td><td>45.4</td></tr>
+              <tr data-scale="Normalized"><td>DUSt3R/LSM</td><td>0.174</td><td>83.5</td><td>0.187</td><td>79.2</td><td>0.124</td><td>84.9</td><td>0.168</td><td>77.8</td><td class="silver">0.063</td><td class="silver">96.9</td><td>0.475</td><td>59.1</td></tr>
+              <tr data-scale="Normalized"><td>MASt3R</td><td>0.160</td><td>81.5</td><td>0.162</td><td>83.1</td><td>0.082</td><td>93.2</td><td>0.150</td><td>79.3</td><td class="gold">0.046</td><td class="gold">97.5</td><td>0.374</td><td>63.9</td></tr>
+              <tr data-scale="Normalized"><td>Spann3R</td><td>0.205</td><td>77.4</td><td>0.204</td><td>70.6</td><td>0.449</td><td>49.1</td><td>0.303</td><td>58.4</td><td>0.241</td><td>74.5</td><td>0.587</td><td>43.3</td></tr>
+              <tr data-scale="Normalized"><td>CUT3R</td><td>0.068</td><td>95.0</td><td>0.108</td><td>84.7</td><td>0.104</td><td>89.9</td><td>0.095</td><td>88.4</td><td>0.111</td><td>89.5</td><td>0.466</td><td>56.0</td></tr>
+              <tr data-scale="Normalized"><td>VGGT</td><td class="gold">0.056</td><td>96.3</td><td class="gold">0.068</td><td class="gold">93.9</td><td class="gold">0.051</td><td class="silver">96.6</td><td class="gold">0.026</td><td class="gold">99.0</td><td class="bronze">0.075</td><td class="bronze">95.9</td><td class="bronze">0.242</td><td>65.9</td></tr>
+              <tr data-scale="Normalized"><td>Fast3R</td><td>0.232</td><td>69.4</td><td>0.221</td><td>71.1</td><td>0.308</td><td>46.8</td><td>0.271</td><td>66.2</td><td>0.368</td><td>44.8</td><td>0.565</td><td>48.7</td></tr>
+              <tr data-scale="Normalized"><td>MonST3R</td><td class="bronze">0.061</td><td>95.4</td><td>0.197</td><td>72.6</td><td>0.083</td><td>93.4</td><td class="silver">0.066</td><td>92.3</td><td>0.110</td><td>89.7</td><td>0.343</td><td>59.4</td></tr>
+              <tr data-scale="Normalized"><td>Align3R</td><td>0.062</td><td class="silver">96.8</td><td class="bronze">0.107</td><td class="bronze">90.1</td><td>0.105</td><td>89.2</td><td class="bronze">0.077</td><td class="silver">93.3</td><td>0.097</td><td>92.9</td><td class="silver">0.237</td><td>69.0</td></tr>
+              <tr data-scale="Normalized"><td>Easi3R</td><td>0.061</td><td>95.8</td><td>0.192</td><td>76.9</td><td>0.150</td><td>76.2</td><td>0.143</td><td>82.1</td><td>0.095</td><td>94.0</td><td>0.323</td><td>53.9</td></tr>
+              <tr data-scale="Normalized"><td>Geo4D</td><td class="silver">0.060</td><td class="gold">97.8</td><td class="silver">0.096</td><td class="silver">93.2</td><td>0.086</td><td>93.8</td><td>0.082</td><td class="bronze">93.0</td><td>0.105</td><td>93.1</td><td class="gold">0.205</td><td class="gold">73.2</td></tr>
+              <tr data-scale="Normalized"><td>Aether</td><td>0.582</td><td>61.2</td><td>0.192</td><td>80.6</td><td class="bronze">0.065</td><td class="bronze">96.2</td><td>0.123</td><td>87.9</td><td>0.145</td><td>91.1</td><td>0.343</td><td class="bronze">69.4</td></tr>
+              <tr data-scale="Normalized"><td>GeometryCrafter</td><td>0.061</td><td class="bronze">96.8</td><td>0.115</td><td>87.7</td><td>0.410</td><td>53.8</td><td>0.124</td><td>83.6</td><td>0.123</td><td>90.8</td><td>0.280</td><td class="silver">72.4</td></tr>
+              <tr data-scale="Metric"><td>MASt3R</td><td>0.549</td><td>4.6</td><td>0.633</td><td>0.9</td><td>0.754</td><td>6.4</td><td>0.749</td><td>0.2</td><td>0.967</td><td>0</td><td>0.701</td><td>2.3</td></tr>
+              <tr data-scale="Metric"><td>CUT3R</td><td>0.097</td><td>90.3</td><td>0.135</td><td>80.6</td><td>0.118</td><td>87.4</td><td>0.127</td><td>88.1</td><td>0.824</td><td>0</td><td>1.020</td><td>23.6</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="legend">
+          <span class="cat-blue-bg">Indoor Scene</span>
+          <span class="cat-green-bg">Outdoor Scene</span>
+          <span class="cat-orange-bg">Large Dynamic Motion</span>
+          <span class="cat-cyan-bg">Drone Scene</span>
+          <span class="cat-pink-bg">Mixed Scene</span>
+        </div>
+      </section>
+
+      <section id="nvs" class="tab-content">
+        <div class="table-container">
+          <table id="nvs-table" class="display">
+          <thead>
+              <tr>
+              <th rowspan="2">Method</th>
+              <th colspan="3" class="cat-gray">DTU</th>
+              <th colspan="3" class="cat-blue">RealEstate10k</th>
+              <th colspan="3" class="cat-blue">ScanNet++</th>
+              <th colspan="3" class="cat-cyan">ACID</th>
+              </tr>
+              <tr>
+              <th class="cat-gray">PSNR ↑</th><th class="cat-gray">SSIM ↑</th><th class="cat-gray">LPIPS ↓</th>
+              <th class="cat-blue">PSNR ↑</th><th class="cat-blue">SSIM ↑</th><th class="cat-blue">LPIPS ↓</th>
+              <th class="cat-blue">PSNR ↑</th><th class="cat-blue">SSIM ↑</th><th class="cat-blue">LPIPS ↓</th>
+              <th class="cat-cyan">PSNR ↑</th><th class="cat-cyan">SSIM ↑</th><th class="cat-cyan">LPIPS ↓</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr><td>LSM</td><td>11.68</td><td>0.3294</td><td>0.5218</td><td>14.04</td><td>0.4388</td><td>0.4873</td><td>12.39</td><td>0.4596</td><td>0.5479</td><td>16.73</td><td>0.4562</td><td>0.4567</td></tr>
+              <tr><td>NoPoSplat</td><td>17.91</td><td>0.6306</td><td>0.2810</td><td>24.53</td><td>0.8450</td><td>0.1634</td><td>22.15</td><td>0.7988</td><td>0.2359</td><td>25.35</td><td>0.7774</td><td>0.1875</td></tr>
+              <tr><td>FLARE</td><td>17.01</td><td>0.5672</td><td>0.2901</td><td>22.15</td><td>0.7126</td><td>0.2363</td><td>23.19</td><td>0.8117</td><td>0.2201</td><td>22.44</td><td>0.6229</td><td>0.2818</td></tr>
+          </tbody>
+          </table>
+        </div>
+        <div class="legend">
+          <span class="cat-gray-bg">Object-Centric</span>
+          <span class="cat-blue-bg">Indoor Scenes</span>
+          <span class="cat-cyan-bg">Drone Scenes</span>
+        </div>
+      </section>
+    </div> 
+</div> 
+
+
+<section id="efficiency" class="full-width-container">
+  <h2 class="section-title">Inference Efficiency</h2>
+  <div class="table-container" style="max-width: 1000px; margin: 1.5rem auto;"> 
+     <table id="efficiency-table" class="display rankable highlight-always">
+      <thead>
+        <tr>
+          <th rowspan="2">Method</th>
+          <th colspan="2">2</th>
+          <th colspan="2">4</th>
+          <th colspan="2">8</th>
+          <th colspan="2">16</th>
+          <th colspan="2">32</th>
+          <th colspan="2">64</th>
+          <th colspan="2">128</th>
+          <th colspan="2">256</th>
+        </tr>
+        <tr>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+          <th>Time ↓</th><th>GPU ↓</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>DUST3R</td><td>0.35 ± 0.19</td><td>2.49</td><td>6.00 ± 0.30</td><td>2.6</td><td>13.96 ± 0.86</td><td>3.65</td><td>50.37 ± 2.28</td><td>8.38</td><td>196.81 ± 6.38</td><td>27.52</td><td>OOM</td><td>OOM</td><td>OOM</td><td>OOM</td><td>OOM</td><td>OOM</td></tr>
+        <tr><td>MASt3R</td><td>9.43 ± 0.28</td><td>2.61</td><td>14.63 ± 0.52</td><td>2.68</td><td>21.38 ± 2.26</td><td>2.78</td><td>42.28 ± 9.06</td><td>3.35</td><td>117.77 ± 40.83</td><td>6.87</td><td>392.23 ± 184.36</td><td>28.78</td><td>OOM</td><td>OOM</td><td>OOM</td><td>OOM</td></tr>
+        <tr><td>Spann3R</td><td>0.16 ± 0.12</td><td>2.79</td><td>0.28 ± 0.01</td><td>2.8</td><td>0.65 ± 0.00</td><td>2.81</td><td>1.38 ± 0.01</td><td>2.84</td><td>2.81 ± 0.07</td><td>2.89</td><td>5.51 ± 0.03</td><td>2.99</td><td>11.25 ± 0.16</td><td>3.19</td><td>23.64 ± 0.70</td><td>3.55</td></tr>
+        <tr><td>CUT3R</td><td>0.19 ± 0.07</td><td>3.33</td><td>0.26 ± 0.04</td><td>3.38</td><td>0.42 ± 0.03</td><td>3.48</td><td>0.78 ± 0.03</td><td>3.65</td><td>1.50 ± 0.03</td><td>4.28</td><td>3.12 ± 0.31</td><td>5.54</td><td>5.76 ± 0.12</td><td>11.68</td><td>11.65 ± 0.16</td><td>17.36</td></tr>
+        <tr><td>VGGT</td><td>0.32 ± 0.41</td><td>7.11</td><td>0.29 ± 0.40</td><td>7.72</td><td>0.24 ± 0.01</td><td>9.06</td><td>0.72 ± 0.49</td><td>10.29</td><td>2.35 ± 0.04</td><td>12.75</td><td>4.23 ± 0.07</td><td>17.66</td><td>11.76 ± 0.41</td><td>28.65</td><td>34.21 ± 2.51</td><td>50.92</td></tr>
+        <tr><td>Fast3R</td><td>0.13 ± 0.14</td><td>4.05</td><td>0.11 ± 0.03</td><td>4.26</td><td>0.15 ± 0.02</td><td>4.75</td><td>0.30 ± 0.01</td><td>5.8</td><td>0.69 ± 0.02</td><td>7.25</td><td>1.78 ± 0.03</td><td>8.43</td><td>5.13 ± 0.06</td><td>10.91</td><td>16.55 ± 0.12</td><td>15.75</td></tr>
+        <tr><td>MonST3R</td><td>0.32 ± 0.25</td><td>2.79</td><td>14.78 ± 0.52</td><td>4.8</td><td>18.77 ± 0.20</td><td>7.84</td><td>35.76 ± 0.35</td><td>8.9</td><td>73.19 ± 0.37</td><td>16.15</td><td>148.17 ± 0.99</td><td>32.99</td><td>605.83 ± 25.24</td><td>66.66</td><td>OOM</td><td>OOM</td></tr>
+        <tr><td>Easi3R</td><td>0.35 ± 0.19</td><td>2.49</td><td>17.35 ± 1.10</td><td>3.41</td><td>24.18 ± 0.76</td><td>4.15</td><td>60.12 ± 2.67</td><td>7.69</td><td>137.16 ± 10.86</td><td>15.96</td><td>273.78 ± 2.08</td><td>32.53</td><td>901.05 ± 5.29</td><td>65.68</td><td>OOM</td><td>OOM</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+ <section id="findings" class="full-width-container">
+  <div class="container">
+    <h2 class="section-title section-title-findings" style="font-size: 1.8rem;">Findings and Takeaways</h2>
+
+    <h3>What Is the Impact of Tasks with Different Difficulties?</h3>
+    <ul>
+      <li>Multi-view geometry inference is inherently harder than pair-view inference. </li>
+      <li>Directly predicting dense 3D scene representations is much more challenging than estimating individual 3D attributes like depth and camera poses. </li>
+      <li>Metric-scale depth estimation remains a key challenge for GFMs. </li>
+      <li>Joint prediction of multiple geometric attributes (e.g., pose, depth, matching) may underlie recent performance gains. </li>
+    </ul>
+    <p><em><strong>Takeaway 1:</strong> Current GFMs are promising but face significant challenges when learning from
+overly complex tasks. Recommendation: Carefully decomposing difficult tasks (e.g., jointly
+predicting geometry, pose, depth, and tracking) into simpler sub-problems can facilitate more
+effective learning, especially under limited 3D data.</em></p>
+
+    <h3>Do GFMs Generalize Well on Different Data Domains?</h3>
+    <ul>
+      <li>GFMs struggle to generalize in domains with extreme data scarcity. </li>
+    </ul>
+    <p><em><strong>Takeaway 2:</strong> Diverse, high-quality data is critical for strong generalization. To improve robustness
+in underrepresented domains, GFMs must be trained on data that covers broader distributions and
+metric-scale annotations.</em></p>
+
+    <h3>Hints for Model Architecture Design, ViT or Diffusion? Strong 2D Feature Extractor?</h3>
+    <ul>
+      <li>No single design, feed-forward ViT or diffusion, is universally superior. </li>
+      <li>Stronger 2D foundation models can significantly enhance 3D GFMs.</li>
+    </ul>
+     <p><em><strong>Takeaway 3:</strong> No single backbone—feed -forward ViT or diffusion, dominates; architecture choice
+should align with task needs. Moreover, leveraging strong 2D feature extractors (e.g., DINO)
+substantially boosts 3D performance.</em></p>
+
+    <h3>Are Current GFMs Ready for Real-Time Perception Systems?</h3>
+    <ul>
+      <li>Despite progress, GFMs still lack the efficiency required for real-time 3D applications.</li>
+    </ul>
+    <p><em><strong>Takeaway 4:</strong> As GFMs scale to handle more views and complex tasks, efficiency becomes as
+critical as accuracy for enabling real-time 3D perception.</em></p>
+  </div>
+</section>
+
+
+
+<!-- Overview Table Section -->
+<!-- <section id="overview">
+  <h2 class="section-title">GFMs Overview</h2>
+  <p style="text-align: center; margin-bottom: 1.5rem; font-size: 0.9rem; color: #555;">
+    Methods are grouped by input type. ✓ denotes support for metric scale; ✗ denotes normalized scale. FT indicates fine-tuning on a pretrained DUSt3R. <br>Abbreviations are explained below. Confidence outputs are omitted for clarity.
+  </p>
+  <div class="table-container">
+    <table id="overview-table" class="display">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>ArXiv Date</th>
+          <th>Publication</th>
+          <th>Output Modality</th>
+          <th>Metric Scale</th>
+          <th>Multi-View Handling</th>
+          <th>Backbone</th>
+          <th># Train Datasets</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="8" class="group-header">Pair of Images</td></tr>
+        <tr><td><a href="https://openaccess.thecvf.com/content/CVPR2024/html/Wang_DUSt3R_Geometric_3D_Vision_Made_Easy_CVPR_2024_paper.html" class="method-link">DUSt3R</a></td><td>2312</td><td>CVPR'24</td><td>PM</td><td>✗</td><td>GA</td><td>ViT</td><td>9</td></tr>
+        <tr><td><a href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/09080.pdf" class="method-link">MASt3R</a></td><td>2406</td><td>ECCV'24</td><td>PM, M</td><td>✓</td><td>GA</td><td>ViT</td><td>14</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2410.18956" class="method-link">  </a></td><td>2410</td><td>NeurIPS'24</td><td>PM, 3DGS, S</td><td>✗</td><td>GA</td><td>ViT</td><td>2</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2410.03825" class="method-link">MonST3R</a></td><td>2410</td><td>ICLR'25</td><td>PM</td><td>✗</td><td>GA</td><td>ViT</td><td>FT 4</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2410.24207" class="method-link">NoPoSplat</a></td><td>2410</td><td>ICLR'25</td><td>3DGS</td><td>✗</td><td>-</td><td>ViT</td><td>1-2</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2412.03079" class="method-link">Align3R</a></td><td>2412</td><td>CVPR'25</td><td>PM</td><td>✗</td><td>GA</td><td>ViT</td><td>FT 5</td></tr>
+        <tr><td><a href="https://splatt3r.active.vision/static/pdfs/splatt3r.pdf" class="method-link">Splatt3R</a></td><td>2408</td><td>ArXiv'24</td><td>PM, M, 3DGS</td><td>✗</td><td>GA</td><td>ViT</td><td>1</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2503.24391" class="method-link">Easi3R</a></td><td>2503</td><td>ArXiv'25</td><td>PM</td><td>✗</td><td>GA</td><td>ViT</td><td>0</td></tr>
+
+        <tr><td colspan="8" class="group-header">Image Sequences</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2408.16061" class="method-link">Spann3R</a></td><td>2408</td><td>ECCV'24</td><td>PM</td><td>✗</td><td>OR</td><td>ViT</td><td>6</td></tr>
+        <tr><td><a href="https://arxiv.org/pdf/2501.12387" class="method-link">CUT3R</a></td><td>2501</td><td>CVPR'25</td><td>PM, PM<sub>c</sub>, Pose</td><td>✓</td><td>OR</td><td>ViT</td><td>32</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2503.18945" class="method-link">Aether</a></td><td>2503</td><td>ArXiv'25</td><td>PM</td><td>✗</td><td>FF</td><td>Diffusion</td><td>1</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2504.07961" class="method-link">Geo4D</a></td><td>2504</td><td>ArXiv'25</td><td>PM, Ray</td><td>✗</td><td>GA</td><td>Diffusion</td><td>5</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2504.01016" class="method-link">GeometryCrafter</a></td><td>2504</td><td>ArXiv'25</td><td>PM</td><td>✗</td><td>GA</td><td>Diffusion</td><td>14</td></tr>
+
+        <tr><td colspan="8" class="group-header">Multi-view Images</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2501.13928" class="method-link">Fast3R</a></td><td>2501</td><td>CVPR'25</td><td>PM, PM<sub>c</sub>, Pose</td><td>✗</td><td>FF</td><td>ViT</td><td>6</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2503.11651" class="method-link">VGGT</a></td><td>2503</td><td>CVPR'25</td><td>PM, PM<sub>c</sub>, Pose, M</td><td>✗</td><td>FF</td><td>ViT</td><td>9</td></tr>
+
+        <tr><td colspan="8" class="group-header">Sparse-view Images</td></tr>
+        <tr><td><a href="https://arxiv.org/pdf/2502.12138" class="method-link">FLARE</a></td><td>2502</td><td>CVPR'25</td><td>PM, 3DGS, Pose</td><td>✗</td><td>FF</td><td>ViT</td><td>8</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="overview-legend" style="margin-top: 1.5rem; font-size: 0.85rem; text-align: left; max-width: 800px; margin-left:auto; margin-right:auto; line-height: 1.6;">
+    <p><small>
+      <strong>Output Modality:</strong> PM = Pointmap (world coordinate), PM<sub>c</sub> = Pointmap (camera coordinate), M = Matching, Pose = Camera Pose, Ray = Ray Map, 3DGS = 3D Gaussian Splatting, S = Semantics<br>
+      <strong>Multi-View Handling:</strong> GA = Global Alignment, OR = Online Registration, FF = Feed-Forward, – = Not Supported<br>
+      <strong>Backbone:</strong> All GFMs adopt transformer-based architectures. ViT = Feed-Forward Transformer; Diffusion = Transformer-based Iterative Denoising
+    </small></p>
+  </div>
+</section> -->
+
+  <section id="citation" class="full-width-container">
+    <div class="container">
+      <h2 class="section-title" style="font-size: 1.8rem;">Citation</h2>
+      <pre><code>@article{cong2025e3dbench,
+  title={E3D-Bench: An End-to-End Benchmark for 3D Geometric Foundation Models},
+  author={Cong, Wenyan and Liang, Yiqing and Zhang, Yancheng and Yang, Ziyi and Wang, Yan and Ivanovic, Boris and Pavone, Marco and Chen, Chen and Wang, Zhangyang and Fan, Zhiwen},
+  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  year={2025}
+}</code></pre>
+    </div>
+  </section>
+
+<script>
+  $(document).ready(function () {
+    const tablesConfig = {
+      paging: false,
+      searching: false,
+      ordering: true,
+      info: false,
+    };
+
+    $('#recon-table').DataTable(tablesConfig);
+    $('#pose-table').DataTable(tablesConfig);
+    $('#sparse-depth-table').DataTable(tablesConfig);
+    $('#video-depth-table').DataTable(tablesConfig);
+    $('#nvs-table').DataTable(tablesConfig);
+    $('#efficiency-table').DataTable(tablesConfig);
+
+    function applyHighlightGeneric(tableInstance, columnIndex, higherIsBetter) {
+        const column = tableInstance.column(columnIndex);
+        const cells = column.nodes().to$().filter(function() {
+            return $(this).closest('tr').css('display') !== 'none';
+        });
+
+        const data = cells.map(function () {
+            const text = $(this).text();
+            if (text === 'OOM' || text === '-' || text === '–' || text === '—' || text.includes('N/A') || text.trim() === '') return NaN;
+            const match = text.match(/([0-9.]+)/);
+            return match ? parseFloat(match[1]) : NaN;
+        }).get();
+
+        const sorted = data.map((value, index) => ({ value, originalIndex: index }))
+            .filter(item => !isNaN(item.value))
+            .sort((a, b) => higherIsBetter ? b.value - a.value : a.value - b.value);
+
+        cells.removeClass('gold silver bronze');
+
+        sorted.forEach((item, rank) => {
+            const cell = cells.eq(item.originalIndex);
+            if (rank === 0) cell.addClass('gold');      
+            else if (rank === 1) cell.addClass('silver'); 
+            else if (rank === 2) cell.addClass('bronze'); 
+        });
+    }
+    
+    function getMetricPreference(headerText) {
+        if (headerText.includes('↓')) return false;
+        if (headerText.includes('↑')) return true;
+        if (['LPIPS', 'ATE', 'RPE', 'AbsRel', 'Time', 'GPU'].some(m => headerText.includes(m))) {
+            return false; 
+        }
+        return true;
+    }
+
+    function updateAllTableHighlights() {
+        $('table.display').each(function() {
+            const table = $(this).DataTable();
+            const totalCols = table.columns().count();
+            if (totalCols === 0) return; 
+            
+            let startColumn = 1; 
+
+            for (let i = startColumn; i < totalCols; i++) {
+                const headerCell = $(table.column(i).header());
+                if (headerCell.length === 0) continue; 
+                const headerText = headerCell.text();
+                applyHighlightGeneric(table, i, getMetricPreference(headerText));
+            }
+        });
+    }
+
+    updateAllTableHighlights();
+
+    const tabs = document.querySelectorAll('.task-nav button.tablink');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        contents.forEach(c => c.classList.remove('active'));
+        const activeTabContent = document.getElementById(tab.dataset.tab);
+        if (activeTabContent) {
+            activeTabContent.classList.add('active');
+        }
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+        updateAllTableHighlights();
+      });
+    });
+
+    $('#setting-toggle').on('change', function () {
+      const isDense = this.checked;
+      $('#recon-table tbody tr').each(function () {
+        const row = $(this);
+        const setting = row.attr('data-setting');
+        if (isDense) { 
+            if (setting === 'Dense') row.show(); else row.hide();
+        } else { 
+            if (setting === 'Extremely Sparse') row.show(); else row.hide();
+        }
+      });
+      $('#recon-table').DataTable().columns.adjust();
+      updateAllTableHighlights();
+    }).trigger('change');
+
+
+    $('#sparse-scale-toggle').on('change', function () {
+      const isMetric = this.checked;
+      $('#sparse-depth-table tbody tr').each(function () {
+        const row = $(this);
+        const scale = row.attr('data-scale');
+        if (isMetric) { 
+          if (scale === 'Metric') row.show(); else row.hide();
+        } else { 
+          if (scale === 'Normalized') row.show(); else row.hide();
+        }
+      });
+      $('#sparse-depth-table').DataTable().columns.adjust(); 
+      updateAllTableHighlights(); 
+    }).trigger('change');
+
+    $('#video-scale-toggle').on('change', function () {
+      const isMetric = this.checked;
+      $('#video-depth-table tbody tr').each(function () {
+        const row = $(this);
+        const scale = row.attr('data-scale');
+         if (isMetric) { 
+          if (scale === 'Metric') row.show(); else row.hide();
+        } else { 
+          if (scale === 'Normalized') row.show(); else row.hide();
+        }
+      });
+      $('#video-depth-table').DataTable().columns.adjust(); 
+      updateAllTableHighlights();
+    }).trigger('change');
+
+  });
+</script>
+
+</body>
+</html>
